@@ -57,11 +57,9 @@ function SVD(A) {
     }
 }
 
-function NAVA(A) {
-    const { u, q, v } = SVD(A);
+function NAVA({ u, q, v }) {
     const nullspace = transpose(v).filter((_, i) => q[i] === 0 || i >= q.length);
     const range = transpose(u).filter((_, i) => q[i] !== 0);
-    console.assert(range.length + nullspace.length === A[0].length);
     return { nullspace, range };
 }
 // x1 = x0 + multiply(pseudoInverse(J), -y)
