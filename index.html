@@ -3,7 +3,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.0.1/math.js"></script>
 <script src="math/svd.js"></script>
 <script src="math/linear.js"></script>
-<script src="math/index.js"></script>
 <script src="polyhedron.js"></script>
 
 <body>
@@ -13,11 +12,11 @@
     <script>
         const dodecahedron = Dodecahedron()
 
-        for (let i in dodecahedron.vertices) {
-            dodecahedron.vertices[i][0] += (Math.random() - 0.5) * 0.5;
-            dodecahedron.vertices[i][1] += (Math.random() - 0.5) * 0.5;
-            dodecahedron.vertices[i][2] += (Math.random() - 0.5) * 0.5;
-        }
+        // for (let i in dodecahedron.vertices) {
+        //     dodecahedron.vertices[i][0] += (Math.random() - 0.5) * 0.5;
+        //     dodecahedron.vertices[i][1] += (Math.random() - 0.5) * 0.5;
+        //     dodecahedron.vertices[i][2] += (Math.random() - 0.5) * 0.5;
+        // }
 
         const lengthEnergy = (e, length) => {
             const [a, b] = dodecahedron.edge(e);
@@ -99,12 +98,12 @@
             return { values, jacobian };
         }
 
-        const lengthOne = (xs) => {
+        const lengthOne = (one) => (xs) => {
             const { E } = dodecahedron;
             const values = Array(E);
             const jacobian = Array(E); // J_rk = jacobian[r][k]
             for (let edge = 0; edge < E; edge++) {
-                const { value, gradient } = lengthEnergy(edge, 1)(xs);
+                const { value, gradient } = lengthEnergy(edge, one)(xs);
                 values[edge] = value;
                 jacobian[edge] = gradient;
             }
@@ -115,15 +114,15 @@
             const a = f(xs);
             const b = g(xs);
             return {
-                 values: a.values.concat(b.values),
-                 jacobian: a.jacobian.concat(b.jacobian),
+                values: a.values.concat(b.values),
+                jacobian: a.jacobian.concat(b.jacobian),
             }
         }
 
         const center = [6, 4, 3]
         const camera = {
-            width: 2,
-            height: 2,
+            width: 3,
+            height: 3,
             depth: 10,
             center: [6, 4, 3],
             base: [[-2, 3, 0], [-9, -6, 26], [-6, -4, -3]].map(normalize3)
@@ -136,21 +135,52 @@
         // x1 = x0 + move(dx)
         // move(dx): project dx orthogonally onto nullspace(J) to get result
         // x2 = x1 + h
-        async function run() {
-            let res;
-            for (let frame = 0; frame < 10; frame++) {
-                res = combine(flatFace, lengthOne)(points);
-                const J = SVD(res.jacobian)
-                const { nullspace, range } = NAVA(J);
-                output.innerText = `degrees of freedom: ${nullspace.length}`;
 
-                console.log(res.values);
+
+        async function run() {
+            let res, J;
+            let F = flatFace; //combine(flatFace, lengthOne(2 * reciprocalofgoldenratio));
+            for (let frame = 0; frame < 1000; frame++) {
+                //res = combine(flatFace, lengthOne)(points);
+                res = F(points);
+                J = SVD(res.jacobian)
+                const { nullspace, range } = NAVA(J);
+                output.innerText = `degrees of freedom: ${nullspace.length}, ${range.length}`;
+                // draw(camera, points, lines);
+                // await sleep(1000);
+
+                let error = Math.max(...res.values.map(Math.abs));
+                let iters = 0;
+                const error0 = error;
+                while (error > 0.00001) {
+                    res = F(points);
+                    J = SVD(res.jacobian)
+                    const h2 = multiply(pseudoInverse(J), res.values.map(y => [-y]));
+                    points = points.map((x, i) => x + h2[i][0]);
+                    error = Math.max(...res.values.map(Math.abs));
+                    iters++;
+                }
+                console.log(frame, 'before', error0, 'after', iters, 'iters', error);
+                //console.log({ h1 })
+                const deltaX = Matrix(points.length, 1);
+                deltaX[11 * 3 + 0][0] = 0.005;
+                deltaX[11 * 3 + 1][0] = 0.003;
+                deltaX[11 * 3 + 2][0] = 0.005;
+
+                deltaX[8 * 3 + 0][0] = -0.005;
+                deltaX[8 * 3 + 1][0] = -0.003;
+                deltaX[8 * 3 + 2][0] = -0.005;
+
+                const h1 = multiply(transpose(nullspace), multiply(nullspace, deltaX)).flat();
+                points = points.map((x, i) => x + h1[i]);
 
                 draw(camera, points, lines);
-                await sleep(1000);
-                
-                const h = multiply(pseudoInverse(J), res.values.map(y => [-y]));
-                points = points.map((x, i) => x + h[i][0]);
+                await sleep(1);
+
+                // points[selectedVertex * 3 + 0] = deltaX[0];
+                // points[selectedVertex * 3 + 1] = deltaX[1];
+                // points[selectedVertex * 3 + 2] = deltaX[2];
+
             }
         }
         run();
