@@ -136,54 +136,107 @@
         // move(dx): project dx orthogonally onto nullspace(J) to get result
         // x2 = x1 + h
 
+        const F = flatFace; // combine(flatFace, lengthOne(2 * reciprocalofgoldenratio));
 
-        async function run() {
-            let res, J;
-            let F = flatFace; //combine(flatFace, lengthOne(2 * reciprocalofgoldenratio));
-            for (let frame = 0; frame < 1000; frame++) {
-                //res = combine(flatFace, lengthOne)(points);
+        let prevX = null;
+        let prevY = null;
+        let isMouseDown = false;
+
+        document.addEventListener("mousedown", (event) => {
+            isMouseDown = true;
+            prevX = event.clientX;
+            prevY = event.clientY;
+        });
+
+        document.addEventListener("mousemove", async (event) => {
+            if (!isMouseDown) return; // Only track movement when button is pressed
+
+            const dx = event.clientX - prevX;
+            const dy = event.clientY - prevY;
+
+            const deltaX = Matrix(points.length, 1);
+            deltaX[11 * 3 + 0][0] = 0;
+            deltaX[11 * 3 + 1][0] = dx / 50;
+            deltaX[11 * 3 + 2][0] = -dy / 50;
+
+            let res = F(points);
+            let J = SVD(res.jacobian)
+            const { nullspace, range } = NAVA(J);
+
+            const h1 = multiply(transpose(nullspace), multiply(nullspace, deltaX)).flat();
+            points = points.map((x, i) => x + h1[i]);
+
+            let error = Math.max(...res.values.map(Math.abs));
+            let iters = 0;
+            const error0 = error;
+            while (error > 0.00001) {
                 res = F(points);
                 J = SVD(res.jacobian)
-                const { nullspace, range } = NAVA(J);
-                output.innerText = `degrees of freedom: ${nullspace.length}, ${range.length}`;
-                // draw(camera, points, lines);
-                // await sleep(1000);
-
-                let error = Math.max(...res.values.map(Math.abs));
-                let iters = 0;
-                const error0 = error;
-                while (error > 0.00001) {
-                    res = F(points);
-                    J = SVD(res.jacobian)
-                    const h2 = multiply(pseudoInverse(J), res.values.map(y => [-y]));
-                    points = points.map((x, i) => x + h2[i][0]);
-                    error = Math.max(...res.values.map(Math.abs));
-                    iters++;
-                }
-                console.log(frame, 'before', error0, 'after', iters, 'iters', error);
-                //console.log({ h1 })
-                const deltaX = Matrix(points.length, 1);
-                deltaX[11 * 3 + 0][0] = 0.005;
-                deltaX[11 * 3 + 1][0] = 0.003;
-                deltaX[11 * 3 + 2][0] = 0.005;
-
-                deltaX[8 * 3 + 0][0] = -0.005;
-                deltaX[8 * 3 + 1][0] = -0.003;
-                deltaX[8 * 3 + 2][0] = -0.005;
-
-                const h1 = multiply(transpose(nullspace), multiply(nullspace, deltaX)).flat();
-                points = points.map((x, i) => x + h1[i]);
-
-                draw(camera, points, lines);
-                await sleep(1);
-
-                // points[selectedVertex * 3 + 0] = deltaX[0];
-                // points[selectedVertex * 3 + 1] = deltaX[1];
-                // points[selectedVertex * 3 + 2] = deltaX[2];
-
+                const h2 = multiply(pseudoInverse(J), res.values.map(y => [-y]));
+                points = points.map((x, i) => x + h2[i][0]);
+                error = Math.max(...res.values.map(Math.abs));
+                iters++;
             }
-        }
-        run();
+
+            console.log(iters);
+
+            requestAnimationFrame(() => draw(camera, points, lines));
+
+            prevX = event.clientX;
+            prevY = event.clientY;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isMouseDown = false;
+        });
+
+
+        // async function run() {
+        //     let res, J;
+        //     for (let frame = 0; frame < 1; frame++) {
+        //         //res = combine(flatFace, lengthOne)(points);
+        //         res = F(points);
+        //         J = SVD(res.jacobian)
+        //         const { nullspace, range } = NAVA(J);
+        //         output.innerText = `degrees of freedom: ${nullspace.length}, ${range.length}`;
+        //         // draw(camera, points, lines);
+        //         // await sleep(1000);
+
+        //         let error = Math.max(...res.values.map(Math.abs));
+        //         let iters = 0;
+        //         const error0 = error;
+        //         while (error > 0.00001) {
+        //             res = F(points);
+        //             J = SVD(res.jacobian)
+        //             const h2 = multiply(pseudoInverse(J), res.values.map(y => [-y]));
+        //             points = points.map((x, i) => x + h2[i][0]);
+        //             error = Math.max(...res.values.map(Math.abs));
+        //             iters++;
+        //         }
+        //         console.log(frame, 'before', error0, 'after', iters, 'iters', error);
+        //         //console.log({ h1 })
+        //         const deltaX = Matrix(points.length, 1);
+        //         deltaX[11 * 3 + 0][0] = 0.005;
+        //         deltaX[11 * 3 + 1][0] = 0.003;
+        //         deltaX[11 * 3 + 2][0] = 0.005;
+
+        //         deltaX[8 * 3 + 0][0] = -0.005;
+        //         deltaX[8 * 3 + 1][0] = -0.003;
+        //         deltaX[8 * 3 + 2][0] = -0.005;
+
+        //         const h1 = multiply(transpose(nullspace), multiply(nullspace, deltaX)).flat();
+        //         points = points.map((x, i) => x + h1[i]);
+
+        //         draw(camera, points, lines);
+        //         await sleep(1);
+
+        //         // points[selectedVertex * 3 + 0] = deltaX[0];
+        //         // points[selectedVertex * 3 + 1] = deltaX[1];
+        //         // points[selectedVertex * 3 + 2] = deltaX[2];
+
+        //     }
+        // }
+        // run();
 
         function sleep(timeout) {
             return new Promise(resolve => setTimeout(resolve, timeout));
