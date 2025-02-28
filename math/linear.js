@@ -101,8 +101,8 @@ function eigenvalues(a11, a22, a33, a12, a13, a23) {
     }
 }
 function norm3([x,y,z]) {
-    let square = x * x + y * y + z * z;
-    if (Number.isFinite(square)) return Math.sqrt(sqaure)
+    const square = x * x + y * y + z * z;
+    if (Number.isFinite(square)) return Math.sqrt(square)
     else {
         const a = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
         return a*Math.sqrt((x/a)**2 + (y/a)**2 + (z/a)**2);
@@ -110,6 +110,6 @@ function norm3([x,y,z]) {
 }
 
 function normalize3(v) {
-    const d = norm(v);
+    const d = norm3(v);
     return [v[0]/d, v[1]/d, v[2]/d];
 }

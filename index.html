@@ -126,14 +126,13 @@
             height: 2,
             depth: 10,
             center: [6, 4, 3],
-            base: [[-2, 3, 0], [-9, -6, 26], [-6, -4, -3]].map(normalize)
+            base: [[-2, 3, 0], [-9, -6, 26], [-6, -4, -3]].map(normalize3)
         }
 
         let points = dodecahedron.vertices.flat();
         const lines = dodecahedron.edges.flat();
 
         var output = document.getElementById('output');
-
 
         async function run() {
             let res;
