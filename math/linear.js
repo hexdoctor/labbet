@@ -65,8 +65,7 @@ function NAVA(A) {
     return { nullspace, range };
 }
 // x1 = x0 + multiply(pseudoInverse(J), -y)
-function pseudoInverse(A) {
-    const { u, q, v } = SVD(A);
+function pseudoInverse({u,q,v}) {
     const S = Matrix(v.length, u.length);
     for (const i in q) {
         const s = q[i];

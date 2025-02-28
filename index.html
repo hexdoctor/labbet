@@ -133,7 +133,8 @@
         const lines = dodecahedron.edges.flat();
 
         var output = document.getElementById('output');
-
+        // x1 = x0 + move(dx)
+        // x2 = x1 + h
         async function run() {
             let res;
             for (let frame = 0; frame < 10; frame++) {
@@ -145,7 +146,8 @@
 
                 draw(camera, points, lines);
                 await sleep(1000);
-                const h = multiply(pseudoInverse(res.jacobian), res.values.map(y => [-y]));
+                
+                const h = multiply(pseudoInverse(SVD(res.jacobian)), res.values.map(y => [-y]));
                 points = points.map((x, i) => x + h[i][0]);
             }
         }
