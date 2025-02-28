@@ -100,14 +100,16 @@ function eigenvalues(a11, a22, a33, a12, a13, a23) {
         return [eig1, 3 * q - eig1 - eig3, eig3]
     }
 }
-
-function normalize([x, y, z]) {
+function norm3([x,y,z]) {
     let square = x * x + y * y + z * z;
-    let d = 0;
-    if (Number.isFinite(square)) d = Math.sqrt(sqaure)
+    if (Number.isFinite(square)) return Math.sqrt(sqaure)
     else {
         const a = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
-        d = a*Math.sqrt((x/a)**2 + (y/a)**2 + (z/a)**2);
+        return a*Math.sqrt((x/a)**2 + (y/a)**2 + (z/a)**2);
     }
-    return [x / d, y / d, z / d];
+}
+
+function normalize3(v) {
+    const d = norm(v);
+    return [v[0]/d, v[1]/d, v[2]/d];
 }
