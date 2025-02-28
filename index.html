@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.0.1/math.js"></script>
+<script src="math/svd.js"></script>
+<script src="math/linear.js"></script>
+<script src="math/index.js"></script>
+<script src="polyhedron.js"></script>
+
+<body>
+    <canvas width="570" height="570" id="canvas"></canvas>
+    <script src="webglrenderer.js"></script>
+    <p id="output"></p>
+    <script>
+        const dodecahedron = Dodecahedron()
+
+        for (let i in dodecahedron.vertices) {
+            dodecahedron.vertices[i][0] += (Math.random() - 0.5) * 0.5;
+            dodecahedron.vertices[i][1] += (Math.random() - 0.5) * 0.5;
+            dodecahedron.vertices[i][2] += (Math.random() - 0.5) * 0.5;
+        }
+
+        const lengthEnergy = (e, length) => {
+            const [a, b] = dodecahedron.edge(e);
+            const ax = 3 * a + 0, ay = 3 * a + 1, az = 3 * a + 2;
+            const bx = 3 * b + 0, by = 3 * b + 1, bz = 3 * b + 2;
+
+            return (xs) => {
+                const x = xs[bx] - xs[ax];
+                const y = xs[by] - xs[ay];
+                const z = xs[bz] - xs[az];
+                const value = x * x + y * y + z * z - length * length;
+                const gradient = Array(xs.length).fill(0);
+                gradient[ax] = -2 * x;
+                gradient[ay] = -2 * y;
+                gradient[az] = -2 * z;
+                gradient[bx] = 2 * x;
+                gradient[by] = 2 * y;
+                gradient[bz] = 2 * z;
+                return { value, gradient }
+            }
+        }
+
+        // X är 3xn matris som representerar ett face
+        //   Xij är den i:e koordinaten av punkt j
+        // Säg att l är minsta egenvärdet till matrisen XX^t med egenvektorn u = (u1 u2 u3)
+        //   l är kvadratsumman av avstånden till det bästa planet och u är normal till det planet
+        // Den partiella derivatan av l med avseende på Xij är : 
+        //   dl/dXij = 2 * sum_k(ui * uk * Xkj)
+        // Xij = xij - ci
+        // dXij/dxij = 1 - dci/dxij
+        //dci/dxij = 1/n d(xi1+xi2+...+xin)/dxij = 1/n
+        // dl/dxij = dl/dXij*dXij/dxij = dl/dXij * (1- 1/n)
+        // dl/dxij = 2(1-1/n) * sum_k(ui * uk * Xkj)
+        const flatEnergy = (face) => {
+            const n = face.length;
+            return (xs) => {
+                let center = [0, 0, 0];
+                for (const v of face) {
+                    center[0] += xs[3 * v + 0];
+                    center[1] += xs[3 * v + 1];
+                    center[2] += xs[3 * v + 2];
+                }
+                center[0] /= n;
+                center[1] /= n;
+                center[2] /= n;
+                const X = Matrix(3, n);
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < n; j++) {
+                        X[i][j] = xs[3 * face[j] + i] - center[i];
+                    }
+                }
+                const m = multiply(X, transpose(X));
+                // const [eig1, eig2, eig3] = eigenvalues(m[0][0], m[1][1], m[2][2], m[0][1], m[0][2], m[1][2]);
+                // console.log(eig1, eig2, eig3);
+                const { eigenvectors } = math.eigs(m);
+                const { value, vector: u } = eigenvectors.reduce((min, { value, vector }) => value < min.value ? { value, vector } : min);
+                // dl/dxij = 2(1-1/n) * sum_k(ui * uk * Xkj)
+                const gradient = Array(xs.length).fill(0);
+                const c = 2 * (1 - 1 / n);
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < n; j++) {
+                        gradient[face[j] * 3 + i] = c * u[i] * (u[0] * X[0][j] + u[1] * X[1][j] + u[2] * X[2][j]);
+                    }
+
+                }
+                return { value: value < 0 ? 0 : value, gradient };
+            }
+        }
+
+        const flatFace = (xs) => {
+            const { faces, F } = dodecahedron;
+            const values = Array(F);
+            const jacobian = Array(F);
+            for (const f in faces) {
+                const { value, gradient } = flatEnergy(faces[f])(xs);
+                values[f] = value;
+                jacobian[f] = gradient;
+            }
+            return { values, jacobian };
+        }
+
+        const lengthOne = (xs) => {
+            const { E } = dodecahedron;
+            const values = Array(E);
+            const jacobian = Array(E); // J_rk = jacobian[r][k]
+            for (let edge = 0; edge < E; edge++) {
+                const { value, gradient } = lengthEnergy(edge, 1)(xs);
+                values[edge] = value;
+                jacobian[edge] = gradient;
+            }
+            return { values, jacobian };
+        }
+
+        const combine = (f, g) => (xs) => {
+            const a = f(xs);
+            const b = g(xs);
+            return {
+                 values: a.values.concat(b.values),
+                 jacobian: a.jacobian.concat(b.jacobian),
+            }
+        }
+
+        const center = [6, 4, 3]
+        const camera = {
+            width: 2,
+            height: 2,
+            depth: 10,
+            center: [6, 4, 3],
+            base: [[-2, 3, 0], [-9, -6, 26], [-6, -4, -3]].map(normalize)
+        }
+
+        let points = dodecahedron.vertices.flat();
+        const lines = dodecahedron.edges.flat();
+
+        var output = document.getElementById('output');
+
+
+        async function run() {
+            let res;
+            for (let frame = 0; frame < 10; frame++) {
+                res = combine(flatFace, lengthOne)(points);
+                const { nullspace, range } = NAVA(res.jacobian);
+                output.innerText = `degrees of freedom: ${nullspace.length}`;
+
+                console.log(res.values);
+
+                draw(camera, points, lines);
+                await sleep(1000);
+                const h = multiply(pseudoInverse(res.jacobian), res.values.map(y => [-y]));
+                points = points.map((x, i) => x + h[i][0]);
+            }
+        }
+        run();
+
+        function sleep(timeout) {
+            return new Promise(resolve => setTimeout(resolve, timeout));
+        }
+    </script>
+</body>
+
+</html>
