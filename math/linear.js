@@ -25,6 +25,20 @@ const multiply = (A, B) => {
     }
     return C;
 }
+const XtrX3 = (X) => {
+    console.assert(X.length == 3);
+    const n = X[0].length;
+    let b11 = 0, b22 = 0, b33 = 0, b12 = 0, b13 = 0, b23 = 0;
+    for (let i = 0; i < n; i++) {
+        b11 += X[0][i]**2;
+        b22 += X[1][i]**2;
+        b33 += X[2][i]**2;
+        b12 += X[0][i]*X[1][i];
+        b13 += X[0][i]*X[2][i];
+        b23 += X[1][i]*X[2][i];
+    }
+    return [[b11, b12, b13], [b12, b22, b23], [b13, b23, b33]];
+}
 
 function det3x3(matrix) {
     return (
@@ -64,12 +78,16 @@ function NAVA({ u, q, v }) {
 }
 // x1 = x0 + multiply(pseudoInverse(J), -y)
 function pseudoInverse({u,q,v}) {
-    const S = Matrix(v.length, u.length);
+    const tmp = Matrix(v.length, u.length);
     for (const i in q) {
         const s = q[i];
-        if (s > 0) S[i][i] = 1 / s
+        if (s > 0) {//TODO: epsilon
+            for (j = 0; j < u.length; j++) {
+                tmp[i][j] = u[j][i] / s
+            }
+        }
     }
-    return multiply(v, multiply(S, transpose(u)))
+    return multiply(v, tmp)
 }
 
 function eigenvalues(a11, a22, a33, a12, a13, a23) {

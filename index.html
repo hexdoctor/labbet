@@ -68,7 +68,8 @@
                         X[i][j] = xs[3 * face[j] + i] - center[i];
                     }
                 }
-                const m = multiply(X, transpose(X));
+                const m = XtrX3(X);//multiply(X, transpose(X));
+
                 // const [eig1, eig2, eig3] = eigenvalues(m[0][0], m[1][1], m[2][2], m[0][1], m[0][2], m[1][2]);
                 // console.log(eig1, eig2, eig3);
                 const { eigenvectors } = math.eigs(m);
@@ -136,7 +137,7 @@
         // move(dx): project dx orthogonally onto nullspace(J) to get result
         // x2 = x1 + h
 
-        const F = flatFace; // combine(flatFace, lengthOne(2 * reciprocalofgoldenratio));
+        const F = combine(flatFace, lengthOne(2 * pho));
 
         let prevX = null;
         let prevY = null;

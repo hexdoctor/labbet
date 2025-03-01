@@ -47,8 +47,8 @@ class Polyhedron {
     }
 }
 
-var goldenratio = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890244970720720418939113748475408807538689175212663386222353693179318006076672635;
-var reciprocalofgoldenratio = 0.61803398874989484820458683436563811772030917980576286213544862270526046281890244970720720418939113748475408807538689175212663386222353693179318006076672635;
+var phi = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890244970720720418939113748475408807538689175212663386222353693179318006076672635;
+var pho = 0.61803398874989484820458683436563811772030917980576286213544862270526046281890244970720720418939113748475408807538689175212663386222353693179318006076672635;
 
 var Dodecahedron = () => Polyhedron.fromLoops([
     [5, 15, 14, 1, 19],
@@ -66,7 +66,7 @@ var Dodecahedron = () => Polyhedron.fromLoops([
 ], [
     [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, -1],
     [1, -1, 1], [1, 1, 1], [-1, 1, 1], [-1, -1, 1],
-    [0, -reciprocalofgoldenratio, -goldenratio], [0, reciprocalofgoldenratio, -goldenratio], [0, -reciprocalofgoldenratio, goldenratio], [0, reciprocalofgoldenratio, goldenratio],
-    [-goldenratio, 0, -reciprocalofgoldenratio], [-goldenratio, 0, reciprocalofgoldenratio], [goldenratio, 0, -reciprocalofgoldenratio], [goldenratio, 0, reciprocalofgoldenratio],
-    [-reciprocalofgoldenratio, -goldenratio, 0], [reciprocalofgoldenratio, -goldenratio, 0], [-reciprocalofgoldenratio, goldenratio, 0], [reciprocalofgoldenratio, goldenratio, 0],
+    [0, -pho, -phi], [0, pho, -phi], [0, -pho, phi], [0, pho, phi],
+    [-phi, 0, -pho], [-phi, 0, pho], [phi, 0, -pho], [phi, 0, pho],
+    [-pho, -phi, 0], [pho, -phi, 0], [-pho, phi, 0], [pho, phi, 0],
 ])
