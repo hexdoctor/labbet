@@ -68,11 +68,8 @@
                         X[i][j] = xs[3 * face[j] + i] - center[i];
                     }
                 }
-                const m = XtrX3(X);//multiply(X, transpose(X));
-                const eigs = eigen3x3symmetric(m);
-                const eig = eigs[eigs.length-1];
-                const value = eig.l;
-                const u = eig.es[0];
+                //multiply(X, transpose(X));
+                const {l:value, e: u} = mineig3x3sym(XtrX3(X));
                 // console.log(eig1, eig2, eig3);
                 //const { eigenvectors } = math.eigs(m);
                 //const { value, vector: u } = eigenvectors.reduce((min, { value, vector }) => value < min.value ? { value, vector } : min);
@@ -139,7 +136,7 @@
         // move(dx): project dx orthogonally onto nullspace(J) to get result
         // x2 = x1 + h
 
-        const F = flatFace;//combine(flatFace, lengthOne(2 * pho));
+        const F = combine(flatFace, lengthOne(2 * pho));
 
         let prevX = null;
         let prevY = null;

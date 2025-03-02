@@ -81,6 +81,101 @@ function pseudoInverse({u,q,v}) {
     }
     return multiply(v, tmp)
 }
+function mineig3x3sym(m) {
+    const d1 = m[0][0], d2 = m[1][1], d3 = m[2][2];
+    const t = m[0][1], c = m[0][2], s = m[1][2];
+    console.assert(t == m[1][0] && c == m[2][0] && s == m[2][1]);
+    
+    const p1 = t**2 + c**2 + s**2;    
+    if (p1 == 0) { // m is diagonal
+        if (d1 == d2 == d3) {
+            return {l: d1, e: [0,0,1]};
+        } else if (d1 == d2) {
+            if (d3 > d1) {
+                return {l: d1, e: [1,0,0]};
+            } else {
+                return {l: d3, e: [0,0,1]};
+            }
+        } else if (d2 == d3) {
+            if (d1 < d2) {
+                return {l: d1, e: [1,0,0]};
+            } else {
+                return {l: d2, e:[0,0,1]};
+            }
+        } else if (d1 == d3) {
+            if (d2 < d1) {
+                return {l:d2, e:[0,1,0]};
+            } else {
+                return {l:d3, e:[0,0,1]};
+            }
+        } else if (d1 > d2 > d3) {
+            return {l:d3, e:[0,0,1]};
+        } else if (d2 > d3 > d1) {
+            return {l:d1, e:[1,0,0]};
+        } else if (d3 > d1 > d2) {
+            return {l:d2, e:[0,1,0]};
+        } else if (d3 > d2 > d1) {
+            return {l:d1, e:[1,0,0]};
+        } else if (d2 > d1 > d3) {
+            return {l:d3, e:[0,0,1]};
+        } else {
+            return {l:d2, e:[0,1,0]};
+        }
+    }
+    else { // m is not diagonal hence also m have more than one distinct eigenvalues
+        const q = (d1 + d2 + d3) / 3;
+        const p2 = (d1 - q)**2 + (d2 - q)**2 + (d3 - q)**2 + 2*p1;
+        const p = Math.sqrt(p2 / 6);
+
+        const b11 = (d1 - q) / p, b12 = t / p, b13 = c / p
+        const b22 = (d2 - q) / p, b23 = s / p, b33 = (d3 - q) / p;
+        const r = (
+            b11 * (b22 * b33 - b23 * b23) - 
+            b12 * (b12 * b33 - b13 * b23) + 
+            b13 * (b12 * b23 - b13 * b22)
+        ) / 2;
+        let lmax, lmin, lmid;
+        if (r >= 1) {
+            lmax = q + 2*p;
+            lmin = q - p;
+            lmid = lmin;    
+        } else if (r <= -1) {
+            lmax = q + p;
+            lmin = q - 2*p;
+            lmid = lmax;
+        } else {
+            const phi = Math.acos(r) / 3;
+            lmax = q + 2 * p * Math.cos(phi);
+            lmin = q + 2 * p * Math.cos(phi + 2 * Math.PI / 3);
+            lmid = 3*q - lmax - lmin;
+        }
+        console.assert(lmax > lmin, "eigenvalues should be distinct");
+        if (lmid <= lmin) {
+            let u = normalize3([
+                (d1+d2-lmin-lmax)*t + c*s,
+                t**2 + (d2-lmin)*(d2-lmax) + s**2,
+                c*t + s*(d2+d3-lmin-lmax)
+            ]);
+            return {l:lmin, e:u};
+        } else if (lmid >= lmax) {
+            let u = normalize3([
+                (d1-lmax)**2 + t**2 + c**2, 
+                t*(d1+d2-2*lmax) + s*c, 
+                c*(d1+d3-2*lmax) + s*t
+            ]);
+            return {l:lmin, e:u};
+        } else {
+            let u = normalize3([
+                (d1+d2-lmid-lmax)*t + c*s,
+                t**2 + (d2-lmid)*(d2-lmax) + s**2,
+                c*t + s*(d2+d3-lmid-lmax)
+            ]);
+            return {l:lmin, e:u};
+        }
+
+    }
+}
+
 function eigen3x3symmetric(m){
     const d1 = m[0][0], d2 = m[1][1], d3 = m[2][2];
     const t = m[0][1], c = m[0][2], s = m[1][2];
