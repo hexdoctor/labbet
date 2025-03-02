@@ -69,11 +69,13 @@
                     }
                 }
                 const m = XtrX3(X);//multiply(X, transpose(X));
-
-                // const [eig1, eig2, eig3] = eigenvalues(m[0][0], m[1][1], m[2][2], m[0][1], m[0][2], m[1][2]);
+                const eigs = eigen3x3symmetric(m);
+                const imin = eigs.length-1;
+                let value = eigs[imin].l;
+                let u = eigs[imin].es[0]
                 // console.log(eig1, eig2, eig3);
-                const { eigenvectors } = math.eigs(m);
-                const { value, vector: u } = eigenvectors.reduce((min, { value, vector }) => value < min.value ? { value, vector } : min);
+                //const { eigenvectors } = math.eigs(m);
+                //const { value, vector: u } = eigenvectors.reduce((min, { value, vector }) => value < min.value ? { value, vector } : min);
                 // dl/dxij = 2(1-1/n) * sum_k(ui * uk * Xkj)
                 const gradient = Array(xs.length).fill(0);
                 const c = 2 * (1 - 1 / n);
