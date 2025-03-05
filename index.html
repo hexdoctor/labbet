@@ -74,15 +74,16 @@
                 //const { eigenvectors } = math.eigs(m);
                 //const { value, vector: u } = eigenvectors.reduce((min, { value, vector }) => value < min.value ? { value, vector } : min);
                 // dl/dxij = 2(1-1/n) * sum_k(ui * uk * Xkj)
+                const norm =Math.sqrt(n);
                 const gradient = Array(xs.length).fill(0);
-                const c = 2 * (1 - 1 / n);
+                const c = 2 * (1 - 1 / n)/norm;
                 for (let i = 0; i < 3; i++) {
                     for (let j = 0; j < n; j++) {
                         gradient[face[j] * 3 + i] = c * u[i] * (u[0] * X[0][j] + u[1] * X[1][j] + u[2] * X[2][j]);
                     }
 
                 }
-                return { value: value < 0 ? 0 : value, gradient };
+                return { value: value < 0 ? 0 : value/norm, gradient };
             }
         }
 
@@ -136,7 +137,7 @@
         // move(dx): project dx orthogonally onto nullspace(J) to get result
         // x2 = x1 + h
 
-        const F = combine(flatFace, lengthOne(2 * pho));
+        const F = flatFace;//combine(flatFace, lengthOne(2 * pho));
 
         let prevX = null;
         let prevY = null;
