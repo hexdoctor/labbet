@@ -1,6 +1,18 @@
-function rowmat(r1,r2,r3) {
-    return {}
+class Matrix3x3 extends Function {
+    constructor(r1,r2,r3) {
+      super('...args', 'return this.__self__.__call__(...args)')
+      var self = this.bind(this)
+      this.__self__ = self
+      self.a = [r1,r2,r3];
+      return self
+    }
+  
+    // Example `__call__` method.
+    __call__(i,j) {
+      return this.a[i][j];
+    }
 }
+c
 // returns qaq^-1 where q is orthogonal
 function conjugate(q, a) {
     const 
@@ -40,7 +52,7 @@ function conjugate(q, a) {
     c20 -= y;
     c21 += x;
     c12 -= x;
-    return rowmat(
+    return new Matrix3x3(
         [c00,c01,c02],
         [c10,c11,c12],
         [c20,c21,c22]
