@@ -1,16 +1,17 @@
 <!doctype html>
 <html>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.0.1/math.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.0.1/math.js"></script>
 <script src="math/svd.js"></script>
 <script src="math/linear.js"></script>
 <script src="math/linear3d.js"></script>
-<script src="polyhedron.js"></script>
+<script src="polyhedron.js"></script> -->
 
 <body>
     <canvas width="570" height="570" id="canvas"></canvas>
     <script src="webglrenderer.js"></script>
     <p id="output"></p>
-    <script>
+    <script type="module">
+        import 
         const dodecahedron = Dodecahedron()
 
         // for (let i in dodecahedron.vertices) {
