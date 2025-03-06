@@ -30,10 +30,9 @@ function testCompare(strA, strB) {
 /*****************************************************
  * EIGEN 3x3 PERFORMANCE TEST 
  */
-
 import { eigs, multiply, transpose } from 'mathjs';
 import { eigen3x3symmetric } from "./linear.mjs";
-import { mat3, conjugate } from "./linear3d.mjs";
+import { mat3, conjugate, eigvalsym3 } from "./linear3d.mjs";
 
 
 const m_1 = [
@@ -67,8 +66,6 @@ let start, end, results = {
     m_2: {},
     m_3: {},
 };
-
-
 
 start = process.hrtime.bigint();
 eigen3x3symmetric(m_1);
