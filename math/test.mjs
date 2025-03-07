@@ -32,7 +32,7 @@ function testCompare(strA, strB) {
  */
 import { eigs, multiply, transpose } from 'mathjs';
 import { eigen3x3symmetric } from "./linear.mjs";
-import { mat3, conjugate, eigvalsym3 } from "./linear3d.mjs";
+import { mat3, conjugate } from "./linear3d.mjs";
 
 
 const m_1 = [
